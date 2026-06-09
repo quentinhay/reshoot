@@ -2,163 +2,785 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>📸 Reshoot — Stock à risque</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f4f4f2; padding: 24px; }
-  header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 8px; }
-  h1 { font-size: 18px; font-weight: 700; color: #111; }
-  #last-update { font-size: 12px; color: #aaa; }
-  .subtitle { font-size: 13px; color: #999; margin-bottom: 24px; }
-
-  /* Filtres */
-  .filters { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
-  .filter-btn { padding: 5px 14px; border-radius: 20px; border: 1.5px solid #ddd; background: #fff; font-size: 12px; font-weight: 600; cursor: pointer; color: #666; transition: all .15s; }
-  .filter-btn:hover { border-color: #999; color: #111; }
-  .filter-btn.active { background: #111; border-color: #111; color: #fff; }
-  .filter-btn.red.active   { background: #e74c3c; border-color: #e74c3c; }
-  .filter-btn.orange.active { background: #e67e22; border-color: #e67e22; }
-  .filter-btn.yellow.active { background: #f39c12; border-color: #f39c12; }
-
-  /* Grille */
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: 14px; }
-  .card { background: #fff; border-radius: 10px; overflow: hidden; text-decoration: none; color: inherit; display: flex; flex-direction: column; transition: transform .15s, box-shadow .15s; }
-  .card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,.12); }
-  .card[hidden] { display: none; }
-  .img-wrap { position: relative; aspect-ratio: 3/4; overflow: hidden; background: #f0f0ee; }
-  .img-wrap img { width: 100%; height: 100%; object-fit: cover; }
-  .badge { position: absolute; top: 8px; right: 8px; color: #fff; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 20px; }
-  .meta { padding: 9px 11px 11px; }
-  .name { font-size: 12px; font-weight: 700; color: #111; line-height: 1.3; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .brand { font-size: 11px; color: #bbb; }
-
-  /* States */
-  #loading { text-align: center; padding: 60px; font-size: 14px; color: #999; }
-  #error { text-align: center; padding: 40px; color: #e74c3c; font-size: 13px; }
-  #count { font-size: 12px; color: #aaa; margin-bottom: 12px; }
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f2f2f0;min-height:100vh}
+header{background:#fff;border-bottom:1px solid #e8e8e6;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+h1{font-size:16px;font-weight:700;color:#111}
+.date{font-size:12px;color:#bbb}
+.filters{padding:16px 24px 0;display:flex;gap:8px;flex-wrap:wrap}
+.btn{padding:6px 14px;border-radius:20px;border:1.5px solid #ddd;background:#fff;font-size:12px;font-weight:600;cursor:pointer;color:#666;transition:all .15s}
+.btn:hover{border-color:#aaa;color:#111}
+.btn.active{background:#111;border-color:#111;color:#fff}
+.btn.r.active{background:#e74c3c;border-color:#e74c3c}
+.btn.o.active{background:#e67e22;border-color:#e67e22}
+.btn.y.active{background:#f39c12;border-color:#f39c12}
+.count{padding:12px 24px 0;font-size:12px;color:#aaa}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:16px;padding:16px 24px 40px}
+.card{background:#fff;border-radius:12px;overflow:hidden;text-decoration:none;color:inherit;display:flex;flex-direction:column;transition:transform .15s,box-shadow .15s}
+.card:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.1)}
+.card[hidden]{display:none}
+.img-wrap{position:relative;aspect-ratio:3/4;overflow:hidden;background:#f0f0ee}
+.img-wrap img{width:100%;height:100%;object-fit:cover}
+.dot{position:absolute;bottom:8px;right:8px;width:14px;height:14px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.info{padding:10px 12px 12px;display:flex;flex-direction:column;gap:4px}
+.name{font-size:12px;font-weight:700;color:#111;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand{font-size:11px;color:#bbb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stats{display:flex;gap:4px;flex-wrap:wrap;margin-top:2px}
+.pill{font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px}
+.gray{background:#f0f0ee;color:#999}
 </style>
 </head>
 <body>
-
 <header>
   <h1>📸 Reshoot — Stock à risque</h1>
-  <span id="last-update"></span>
+  <span class="date">Mise à jour 09/06/2026</span>
 </header>
-<p class="subtitle">Données en direct depuis Metabase · mise à jour à chaque ouverture</p>
-
 <div class="filters">
-  <button class="filter-btn active" data-filter="all">Tous</button>
-  <button class="filter-btn red"    data-filter="red">🔴 Critique ≥60</button>
-  <button class="filter-btn orange" data-filter="orange">🟠 Urgent ≥45</button>
-  <button class="filter-btn yellow" data-filter="yellow">🟡 Attention ≥35</button>
+  <button class="btn active" data-f="all">Tous <span id="n-all"></span></button>
+  <button class="btn r" data-f="red">🔴 Critique ≥60 <span id="n-red"></span></button>
+  <button class="btn o" data-f="orange">🟠 Urgent ≥45 <span id="n-orange"></span></button>
+  <button class="btn y" data-f="yellow">🟡 Attention ≥35 <span id="n-yellow"></span></button>
 </div>
+<div class="count" id="count"></div>
+<div class="grid" id="grid">
 
-<div id="count"></div>
-<div id="loading">Chargement des données Metabase…</div>
-<div id="error" hidden></div>
-<div class="grid" id="grid"></div>
-
-<script>
-const METABASE_URL = 'https://lecloset-metabase.lecloset.fr';
-const CARD_ID = 4019;
-
-function getUrgency(n) {
-  if (n >= 60) return { color: '#e74c3c', label: '🔴 ' + n, tier: 'red' };
-  if (n >= 45) return { color: '#e67e22', label: '🟠 ' + n, tier: 'orange' };
-  if (n >= 35) return { color: '#f39c12', label: '🟡 ' + n, tier: 'yellow' };
-  return { color: '#27ae60', label: '🟢 ' + n, tier: 'green' };
-}
-
-async function loadData() {
-  const resp = await fetch(`${METABASE_URL}/api/card/${CARD_ID}/query`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-Metabase-Session': '' },
-    credentials: 'include',
-    body: JSON.stringify({})
-  });
-  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-  const data = await resp.json();
-  return data.data;
-}
-
-function buildGrid(data) {
-  const cols = data.cols.map(c => c.name);
-  const idx = Object.fromEntries(cols.map((c, i) => [c, i]));
-  const grid = document.getElementById('grid');
-  grid.innerHTML = '';
-
-  data.rows.forEach(row => {
-    const name     = row[idx.product_name];
-    const brand    = row[idx.brand_name];
-    const imgUrl   = row[idx.main_picture_url];
-    const factUrl  = row[idx.product_url];
-    const atRisk   = row[idx.at_risk_item_count];
-    const urg      = getUrgency(atRisk);
-
-    const card = document.createElement('a');
-    card.className = 'card';
-    card.href = factUrl;
-    card.target = '_blank';
-    card.dataset.tier = urg.tier;
-    card.style.borderTop = `3px solid ${urg.color}`;
-    card.innerHTML = `
-      <div class="img-wrap">
-        <img src="${imgUrl}" alt="" loading="lazy" onerror="this.style.opacity=0">
-        <span class="badge" style="background:${urg.color}">${urg.label}</span>
+  <a class="card" href="https://lecloset-factory-production.herokuapp.com/supply/products/prd_Sk3Ot2" target="_blank" data-tier="red">
+    <div class="img-wrap">
+      <img src="https://lecloset.s3.amazonaws.com/uploads/picture/image/prd_Sk3Ot2/standard_2ce3f045-74ef-4195-9392-d440b045ca11.jpeg" alt="" loading="lazy">
+      <span class="dot" style="background:#e74c3c"></span>
+    </div>
+    <div class="info">
+      <div class="name">Jean Sonny</div>
+      <div class="brand">La Petite Etoile · Jeans</div>
+      <div class="stats">
+        <span class="pill" style="background:#e74c3c22;color:#e74c3c">81 à risque</span>
+        <span class="pill gray">88% du stock</span>
       </div>
-      <div class="meta">
-        <div class="name" title="${name}">${name}</div>
-        <div class="brand">${brand}</div>
-      </div>`;
-    grid.appendChild(card);
-  });
+    </div>
+  </a>
+  <a class="card" href="https://lecloset-factory-production.herokuapp.com/supply/products/prd_pyChCh" target="_blank" data-tier="red">
+    <div class="img-wrap">
+      <img src="https://lecloset.s3.amazonaws.com/uploads/picture/image/prd_pyChCh/standard_garment774_13.jpeg" alt="" loading="lazy">
+      <span class="dot" style="background:#e74c3c"></span>
+    </div>
+    <div class="info">
+      <div class="name">Haut Marina</div>
+      <div class="brand">Goa · Tops</div>
+      <div class="stats">
+        <span class="pill" style="background:#e74c3c22;color:#e74c3c">79 à risque</span>
+        <span class="pill gray">43% du stock</span>
+      </div>
+    </div>
+  </a>
+  <a class="card" href="https://lecloset-factory-production.herokuapp.com/supply/products/prd_izCqm1" target="_blank" data-tier="red">
+    <div class="img-wrap">
+      <img src="https://lecloset.imgix.net/uploads/picture/image/prd_izCqm1/standard_fab763b3-6e12-46b6-96f0-ed41c9a95dc7.jpeg" alt="" loading="lazy">
+      <span class="dot" style="background:#e74c3c"></span>
+    </div>
+    <div class="info">
+      <div class="name">Robe Luxi</div>
+      <div class="brand">Vila · Robes</div>
+      <div class="stats">
+        <span class="pill" style="background:#e74c3c22;color:#e74c3c">61 à risque</span>
+        <span class="pill gray">86% du stock</span>
+      </div>
+    </div>
+  </a>
+  <a class="card" href="https://lecloset-factory-production.herokuapp.com/supply/products/prd_dh4s3v" target="_blank" data-tier="red">
+    <div class="img-wrap">
+      <img src="https://lecloset.imgix.net/uploads/picture/image/prd_dh4s3v/standard_e1b0d9bf-780b-4cfb-8cbd-cf66e80788ea.jpg" alt="" loading="lazy">
+      <span class="dot" style="background:#e74c3c"></span>
+    </div>
+    <div class="info">
+      <div class="name">Blazer Jilma</div>
+      <div class="brand">Ichi · Vestes</div>
+      <div class="stats">
+        <span class="pill" style="background:#e74c3c22;color:#e74c3c">60 à risque</span>
+        <span class="pill gray">68% du stock</span>
+      </div>
+    </div>
+  </a>
+  <a class="card" href="https://lecloset-factory-production.herokuapp.com/supply/products/prd_nFrfQA" target="_blank" data-tier="orange">
+    <div class="img-wrap">
+      <img src="https://lecloset.s3.amazonaws.com/uploads/picture/image/prd_nFrfQA/standard_1AXoAfbUwHddlp7Qgcfy9qqaAZEd1jmOq20250306-2-bgln2g" alt="" loading="lazy">
+      <span class="dot" style="background:#e67e22"></span>
+    </div>
+    <div class="info">
+      <div class="name">Robe Kenya</div>
+      <div class="brand">Cerise Blue · Robes</div>
+      <div class="stats">
+        <span class="pill" style="background:#e67e2222;color:#e67e22">59 à risque</span>
+        <span class="pill gray">87% du stock</span>
+      </div>
+    </div>
+  </a>
+  <a class="card" href="https://lecloset-factory-production.herokuapp.com/supply/products/prd_KG9qXh" target="_blank" data-tier="orange">
+    <div class="img-wrap">
+      <img src="https://lecloset.s3.amazonaws.com/uploads/picture/image/prd_KG9qXh/standard_garment436_8.jpeg" alt="" loading="lazy">
+      <span class="dot" style="background:#e67e22"></span>
+    </div>
+    <div class="info">
+      <div class="name">Pantalon Tonic</div>
+      <div class="brand">Garance · Pantalons</div>
+      <div class="stats">
+        <span class="pill" style="background:#e67e2222;color:#e67e22">55 à risque</span>
+        <span class="pill gray">67% du stock</span>
+      </div>
+    </div>
+  </a>
+  <a class="card" href="https://lecloset-factory-production.herokuapp.com/supply/products/prd_o0crgi" target="_blank" data-tier="orange">
+    <div class="img-wrap">
+      <img src="https://lecloset.s3.amazonaws.com/uploads/picture/image/prd_o0crgi/standard_YCOO-ANGE-ZEIG5H_55__1_.jpg" alt="" loading="lazy">
+      <span class="dot" style="background:#e67e22"></span>
+    </div>
+    <div class="info">
+      <div class="name">Gilet Vefiti</div>
+      <div class="brand">An'ge · Pulls</div>
+      <div class="stats">
+        <span class="pill" style="background:#e67e2222;color:#e67e22">53 à risque</span>
+        <span class="pill gray">77% du stock</span>
+      </div>
+    </div>
+  </a>
+  <a class="card" href="https://lecloset-factory-production.herokuapp.com/supply/products/prd_ZZIiCL" target="_blank" data-tier="orange">
+    <div class="img-wrap">
+      <img src="https://lecloset.s3.amazonaws.com/uploads/picture/image/prd_ZZIiCL/standard_1aoDmsGmfSHb4bh30Ymo9Qan25Wm4SZB-20251204-2-tkwj2p" alt="" loading="lazy">
+      <span class="dot" style="background:#e67e22"></span>
+    </div>
+    <div class="info">
+      <div class="name">Pantalon Ihpuna</div>
+      <div class="brand">Ichi · Pantalons</div>
+      <div class="stats">
+        <span class="pill" style="background:#e67e2222;color:#e67e22">51 à risque</span>
+        <span class="pill gray">62% du stock</span>
+      </div>
+    </div>
+  </a>
+  <a class="card" href="https://lecloset-factory-production.herokuapp.com/supply/products/prd_LeAl9G" target="_blank" data-tier="orange">
+    <div class="img-wrap">
+      <img src="https://lecloset.imgix.net/uploads/picture/image/prd_LeAl9G/standard_99c225a3-5fa4-41ca-a84a-c74fccaf285b.jpg" alt="" loading="lazy">
+      <span class="dot" style="background:#e67e22"></span>
+    </div>
+    <div class="info">
+      <div class="name">Haut Laika</div>
+      <div class="brand">Noisy May · Tops</div>
+      <div class="stats">
+        <span class="pill" style="background:#e67e2222;color:#e67e22">50 à risque</span>
+        <span class="pill gray">69% du stock</span>
+      </div>
+    </div>
+  </a>
+  <a class="card" href="https://lecloset-factory-production.herokuapp.com/supply/products/prd_H2ioXh" target="_blank" data-tier="orange">
+    <div class="img-wrap">
+      <img src="https://lecloset.imgix.net/uploads/picture/image/prd_H2ioXh/standard_garment457_undefined__2_k.png" alt="" loading="lazy">
+      <span class="dot" style="background:#e67e22"></span>
+    </div>
+    <div class="info">
+      <div class="name">Blazer Miri</div>
+      <div class="brand">Purple · Vestes</div>
+      <div class="stats">
+        <span class="pill" style="background:#e67e2222;color:#e67e22">50 à risque</span>
+        <span class="pill gray">27% du stock</span>
+      </div>
+    </div>
+  </a>
+  <a class="card" href="https://lecloset-factory-production.herokuapp.com/supply/products/prd_ThASWZ" target="_blank" data-tier="orange">
+    <div class="img-wrap">
+      <img src="https://lecloset.s3.amazonaws.com/uploads/picture/image/prd_ThASWZ/standard_1b0TfsImNNYkJ8X76WLQcPywKC-iJBxmu20250430-2-3x8v9f" alt="" loading="lazy">
+      <span class="dot" style="background:#e67e22"></span>
+    </div>
+    <div class="info">
+      <div class="name">Tee-Shirt Cassiane</div>
+      <div class="brand">Artlove · Tops</div>
+      <div class="stats">
+        <span class="pill" style="background:#e67e2222;color:#e67e22">49 à risque</span>
+        <span class="pill gray">83% du stock</span>
+      </div>
+    </div>
+  </a>
+  <a class="card" href="https://lecloset-factory-production.herokuapp.com/supply/products/prd_raNzCn" target="_blank" data-tier="orange">
+    <div class="img-wrap">
+      <img src="https://lecloset.imgix.net/uploads/picture/image/prd_raNzCn/standard_e81a13b3-20fd-4496-8e7b-fd3918bf4948.jpeg" alt="" loading="lazy">
+      <span class="dot" style="background:#e67e22"></span>
+    </div>
+    <div class="info">
+      <div class="name">Robe Velline</div>
+      <div class="brand">Grace & Mila · Robes</div>
+      <div class="stats">
+        <span class="pill" style="background:#e67e2222;color:#e67e22">49 à risque</span>
+        <span class="pill gray">63% du stock</span>
+      </div>
+    </div>
+  </a>
+  <a class="card" href="https://lecloset-factory-production.herokuapp.com/supply/products/prd_ssDcZ5" target="_blank" data-tier="orange">
+    <div class="img-wrap">
+      <img src="https://lecloset.s3.amazonaws.com/uploads/picture/image/prd_ssDcZ5/standard_1pg9tTouVWioGhmd5ClHiP3f4f8xmPsIV20250623-2-rzr3vo" alt="" loading="lazy">
+      <span class="dot" style="background:#e67e22"></span>
+    </div>
+    <div class="info">
+      <div class="name">Robe Margot</div>
+      <div class="brand">Adoré · Robes</div>
+      <div class="stats">
+        <span class="pill" style="background:#e67e2222;color:#e67e22">48 à risque</span>
+        <span class="pill gray">79% du stock</span>
+      </div>
+    </div>
+  </a>
+  <a class="card" href="https://lecloset-factory-production.herokuapp.com/supply/products/prd_WVNTGv" target="_blank" data-tier="orange">
+    <div class="img-wrap">
+      <img src="https://lecloset.s3.amazonaws.com/uploads/picture/image/prd_WVNTGv/standard_1nQdx1vnIqt8nlKJDEpVKoozL0Q70ZN_l20250515-2-24ssys" alt="" loading="lazy">
+      <span class="dot" style="background:#e67e22"></span>
+    </div>
+    <div class="info">
+      <div class="name">Robe Aleida</div>
+      <div class="brand">New Studio · Robes</div>
+      <div class="stats">
+        <span class="pill" style="background:#e67e2222;color:#e67e22">47 à risque</span>
+        <span class="pill gray">94% du stock</span>
+      </div>
+    </div>
+  </a>
+  <a class="card" href="https://lecloset-factory-production.herokuapp.com/supply/products/prd_r5735N" target="_blank" data-tier="orange">
+    <div class="img-wrap">
+      <img src="https://lecloset.s3.amazonaws.com/uploads/picture/image/prd_r5735N/standard_Z9C6IA-ZPVB1Y36708_5.png" alt="" loading="lazy">
+      <span class="dot" style="background:#e67e22"></span>
+    </div>
+    <div class="info">
+      <div class="name">Chemise Arlyne</div>
+      <div class="brand">Goa · Chemises</div>
+      <div class="stats">
+        <span class="pill" style="background:#e67e2222;color:#e67e22">47 à risque</span>
+        <span class="pill gray">56% du stock</span>
+      </div>
+    </div>
+  </a>
+  <a class="card" href="https://lecloset-factory-production.herokuapp.com/supply/products/prd_IADoil" target="_blank" data-tier="orange">
+    <div class="img-wrap">
+      <img src="https://lecloset.imgix.net/uploads/picture/image/prd_IADoil/standard_ac476236-f64a-42fa-9106-4c0f3ba77f09.jpeg" alt="" loading="lazy">
+      <span class="dot" style="background:#e67e22"></span>
+    </div>
+    <div class="info">
+      <div class="name">Jupe Ying</div>
+      <div class="brand">New Studio · Jupes</div>
+      <div class="stats">
+        <span class="pill" style="background:#e67e2222;color:#e67e22">45 à risque</span>
+        <span class="pill gray">56% du stock</span>
+      </div>
+    </div>
+  </a>
+  <a class="card" href="https://lecloset-factory-production.herokuapp.com/supply/products/prd_pLzUNM" target="_blank" data-tier="yellow">
+    <div class="img-wrap">
+      <img src="https://lecloset.s3.amazonaws.com/uploads/picture/image/prd_pLzUNM/standard_A4866A-ZDT2BK_3_3.jpg" alt="" loading="lazy">
+      <span class="dot" style="background:#f39c12"></span>
+    </div>
+    <div class="info">
+      <div class="name">Pantalon Malena</div>
+      <div class="brand">In April 1986 · Pantalons</div>
+      <div class="stats">
+        <span class="pill" style="background:#f39c1222;color:#f39c12">44 à risque</span>
+        <span class="pill gray">94% du stock</span>
+      </div>
+    </div>
+  </a>
+  <a class="card" href="https://lecloset-factory-production.herokuapp.com/supply/products/prd_Fzx67M" target="_blank" data-tier="yellow">
+    <div class="img-wrap">
+      <img src="https://lecloset.s3.amazonaws.com/uploads/picture/image/prd_Fzx67M/standard_boho_blouse_4.png" alt="" loading="lazy">
+      <span class="dot" style="background:#f39c12"></span>
+    </div>
+    <div class="info">
+      <div class="name">Blouse Bahati</div>
+      <div class="brand">La Petite Etoile · Chemises</div>
+      <div class="stats">
+        <span class="pill" style="background:#f39c1222;color:#f39c12">44 à risque</span>
+        <span class="pill gray">72% du stock</span>
+      </div>
+    </div>
+  </a>
+  <a class="card" href="https://lecloset-factory-production.herokuapp.com/supply/products/prd_4KfXVj" target="_blank" data-tier="yellow">
+    <div class="img-wrap">
+      <img src="https://lecloset.imgix.net/uploads/picture/image/prd_4KfXVj/standard_18abff23-4440-43b6-93f9-7fede6f88ac9.jpeg" alt="" loading="lazy">
+      <span class="dot" style="background:#f39c12"></span>
+    </div>
+    <div class="info">
+      <div class="name">Pantalon Pcsally</div>
+      <div class="brand">Pieces · Pantalons</div>
+      <div class="stats">
+        <span class="pill" style="background:#f39c1222;color:#f39c12">44 à risque</span>
+        <span class="pill gray">57% du stock</span>
+      </div>
+    </div>
+  </a>
+  <a class="card" href="https://lecloset-factory-production.herokuapp.com/supply/products/prd_zBt7UL" target="_blank" data-tier="yellow">
+    <div class="img-wrap">
+      <img src="https://lecloset.imgix.net/uploads/picture/image/prd_zBt7UL/standard_07752341-476d-48ee-888b-bcef1bb08153.jpeg" alt="" loading="lazy">
+      <span class="dot" style="background:#f39c12"></span>
+    </div>
+    <div class="info">
+      <div class="name">Chemise Myung</div>
+      <div class="brand">Charlior · Chemises</div>
+      <div class="stats">
+        <span class="pill" style="background:#f39c1222;color:#f39c12">44 à risque</span>
+        <span class="pill gray">51% du stock</span>
+      </div>
+    </div>
+  </a>
+  <a class="card" href="https://lecloset-factory-production.herokuapp.com/supply/products/prd_uUPZvg" target="_blank" data-tier="yellow">
+    <div class="img-wrap">
+      <img src="https://lecloset.s3.amazonaws.com/uploads/picture/image/prd_uUPZvg/standard_AQJFIB.jpg" alt="" loading="lazy">
+      <span class="dot" style="background:#f39c12"></span>
+    </div>
+    <div class="info">
+      <div class="name">Robe Cassieca</div>
+      <div class="brand">Suncoo · Robes</div>
+      <div class="stats">
+        <span class="pill" style="background:#f39c1222;color:#f39c12">43 à risque</span>
+        <span class="pill gray">86% du stock</span>
+      </div>
+    </div>
+  </a>
+  <a class="card" href="https://lecloset-factory-production.herokuapp.com/supply/products/prd_FOzreT" target="_blank" data-tier="yellow">
+    <div class="img-wrap">
+      <img src="https://lecloset.s3.amazonaws.com/uploads/picture/image/prd_FOzreT/standard_15kS4nTvO1QuVuYMfmT9jtBbcLNnt2E9Z20251224-2-b9i00t" alt="" loading="lazy">
+      <span class="dot" style="background:#f39c12"></span>
+    </div>
+    <div class="info">
+      <div class="name">Gilet Mathilda</div>
+      <div class="brand">Jubylee · Pulls</div>
+      <div class="stats">
+        <span class="pill" style="background:#f39c1222;color:#f39c12">42 à risque</span>
+        <span class="pill gray">49% du stock</span>
+      </div>
+    </div>
+  </a>
+  <a class="card" href="https://lecloset-factory-production.herokuapp.com/supply/products/prd_9EN0t4" target="_blank" data-tier="yellow">
+    <div class="img-wrap">
+      <img src="https://lecloset.s3.amazonaws.com/uploads/picture/image/prd_9EN0t4/standard_AIG1Z4_21.jpg" alt="" loading="lazy">
+      <span class="dot" style="background:#f39c12"></span>
+    </div>
+    <div class="info">
+      <div class="name">Robe Ramia</div>
+      <div class="brand">La Petite Etoile · Robes</div>
+      <div class="stats">
+        <span class="pill" style="background:#f39c1222;color:#f39c12">41 à risque</span>
+        <span class="pill gray">76% du stock</span>
+      </div>
+    </div>
+  </a>
+  <a class="card" href="https://lecloset-factory-production.herokuapp.com/supply/products/prd_TsVwjb" target="_blank" data-tier="yellow">
+    <div class="img-wrap">
+      <img src="https://lecloset.s3.amazonaws.com/uploads/picture/image/prd_TsVwjb/standard_16YcV3REZLLh4ukIblaVLLliIqvwSC-Y_20250704-2-if7pdd" alt="" loading="lazy">
+      <span class="dot" style="background:#f39c12"></span>
+    </div>
+    <div class="info">
+      <div class="name">Pantalon KCalia</div>
+      <div class="brand">Kaffe Curve · Pantalons</div>
+      <div class="stats">
+        <span class="pill" style="background:#f39c1222;color:#f39c12">41 à risque</span>
+        <span class="pill gray">65% du stock</span>
+      </div>
+    </div>
+  </a>
+  <a class="card" href="https://lecloset-factory-production.herokuapp.com/supply/products/prd_pA2f7t" target="_blank" data-tier="yellow">
+    <div class="img-wrap">
+      <img src="https://lecloset.imgix.net/uploads/picture/image/prd_pA2f7t/standard_6199fe9e-b7a8-4e75-b61e-e73648257f76.png" alt="" loading="lazy">
+      <span class="dot" style="background:#f39c12"></span>
+    </div>
+    <div class="info">
+      <div class="name">Combinaison Vanina</div>
+      <div class="brand">Grace & Mila · Combinaisons</div>
+      <div class="stats">
+        <span class="pill" style="background:#f39c1222;color:#f39c12">41 à risque</span>
+        <span class="pill gray">53% du stock</span>
+      </div>
+    </div>
+  </a>
+  <a class="card" href="https://lecloset-factory-production.herokuapp.com/supply/products/prd_8LgRpw" target="_blank" data-tier="yellow">
+    <div class="img-wrap">
+      <img src="https://lecloset.imgix.net/uploads/picture/image/prd_8LgRpw/standard_1XNYXGK5klOYr_0x9_pNkkT6GeS_GOKkD20260128-2-gm07js" alt="" loading="lazy">
+      <span class="dot" style="background:#f39c12"></span>
+    </div>
+    <div class="info">
+      <div class="name">Jean Kimu</div>
+      <div class="brand">B.Young · Jeans</div>
+      <div class="stats">
+        <span class="pill" style="background:#f39c1222;color:#f39c12">40 à risque</span>
+        <span class="pill gray">62% du stock</span>
+      </div>
+    </div>
+  </a>
+  <a class="card" href="https://lecloset-factory-production.herokuapp.com/supply/products/prd_PgfiwQ" target="_blank" data-tier="yellow">
+    <div class="img-wrap">
+      <img src="https://lecloset.s3.amazonaws.com/uploads/picture/image/prd_PgfiwQ/standard_ZLWA8V36764_6.png" alt="" loading="lazy">
+      <span class="dot" style="background:#f39c12"></span>
+    </div>
+    <div class="info">
+      <div class="name">Robe Vylla</div>
+      <div class="brand">Grace & Mila · Robes</div>
+      <div class="stats">
+        <span class="pill" style="background:#f39c1222;color:#f39c12">40 à risque</span>
+        <span class="pill gray">51% du stock</span>
+      </div>
+    </div>
+  </a>
+  <a class="card" href="https://lecloset-factory-production.herokuapp.com/supply/products/prd_y99kIw" target="_blank" data-tier="yellow">
+    <div class="img-wrap">
+      <img src="https://lecloset.s3.amazonaws.com/uploads/picture/image/prd_y99kIw/standard_garment256_1.png" alt="" loading="lazy">
+      <span class="dot" style="background:#f39c12"></span>
+    </div>
+    <div class="info">
+      <div class="name">Jean 7/8</div>
+      <div class="brand">Ycoo · Jeans</div>
+      <div class="stats">
+        <span class="pill" style="background:#f39c1222;color:#f39c12">40 à risque</span>
+        <span class="pill gray">50% du stock</span>
+      </div>
+    </div>
+  </a>
+  <a class="card" href="https://lecloset-factory-production.herokuapp.com/supply/products/prd_WJiq3Y" target="_blank" data-tier="yellow">
+    <div class="img-wrap">
+      <img src="https://lecloset.s3.amazonaws.com/uploads/picture/image/prd_WJiq3Y/standard_garment598_7.jpg" alt="" loading="lazy">
+      <span class="dot" style="background:#f39c12"></span>
+    </div>
+    <div class="info">
+      <div class="name">Chemise Lenora</div>
+      <div class="brand">Goa · Chemises</div>
+      <div class="stats">
+        <span class="pill" style="background:#f39c1222;color:#f39c12">40 à risque</span>
+        <span class="pill gray">43% du stock</span>
+      </div>
+    </div>
+  </a>
+  <a class="card" href="https://lecloset-factory-production.herokuapp.com/supply/products/prd_wQcWvg" target="_blank" data-tier="yellow">
+    <div class="img-wrap">
+      <img src="https://lecloset.s3.amazonaws.com/uploads/picture/image/prd_wQcWvg/standard_1j64qkogS3AMHVN2Bm0qHjRUYIRTxDZlm20250507-2-ls3av6" alt="" loading="lazy">
+      <span class="dot" style="background:#f39c12"></span>
+    </div>
+    <div class="info">
+      <div class="name">Veste Kcmaia</div>
+      <div class="brand">Kaffe Curve · Vestes</div>
+      <div class="stats">
+        <span class="pill" style="background:#f39c1222;color:#f39c12">38 à risque</span>
+        <span class="pill gray">93% du stock</span>
+      </div>
+    </div>
+  </a>
+  <a class="card" href="https://lecloset-factory-production.herokuapp.com/supply/products/prd_zeQ2jr" target="_blank" data-tier="yellow">
+    <div class="img-wrap">
+      <img src="https://lecloset.s3.amazonaws.com/uploads/picture/image/prd_zeQ2jr/standard_1Eh_OtB9OFDpZztfm3OPoqUp-vS4U5guh20250401-2-qrmoep" alt="" loading="lazy">
+      <span class="dot" style="background:#f39c12"></span>
+    </div>
+    <div class="info">
+      <div class="name">Pantalon Maternité Mlbeysa</div>
+      <div class="brand">Mamalicious · Pantalons</div>
+      <div class="stats">
+        <span class="pill" style="background:#f39c1222;color:#f39c12">38 à risque</span>
+        <span class="pill gray">72% du stock</span>
+      </div>
+    </div>
+  </a>
+  <a class="card" href="https://lecloset-factory-production.herokuapp.com/supply/products/prd_NXXI7F" target="_blank" data-tier="yellow">
+    <div class="img-wrap">
+      <img src="https://lecloset.s3.amazonaws.com/uploads/picture/image/prd_NXXI7F/standard_1ZDWw3GbxHjoWtjhMYXTpMbViDK_h_edN20250203-2-6emik0" alt="" loading="lazy">
+      <span class="dot" style="background:#f39c12"></span>
+    </div>
+    <div class="info">
+      <div class="name">Haut Maternité Gloria Tess</div>
+      <div class="brand">Mamalicious · Tops</div>
+      <div class="stats">
+        <span class="pill" style="background:#f39c1222;color:#f39c12">37 à risque</span>
+        <span class="pill gray">92% du stock</span>
+      </div>
+    </div>
+  </a>
+  <a class="card" href="https://lecloset-factory-production.herokuapp.com/supply/products/prd_0OGhco" target="_blank" data-tier="yellow">
+    <div class="img-wrap">
+      <img src="https://lecloset.s3.amazonaws.com/uploads/picture/image/prd_0OGhco/standard_AXKBEJ.jpg" alt="" loading="lazy">
+      <span class="dot" style="background:#f39c12"></span>
+    </div>
+    <div class="info">
+      <div class="name">Robe Axel</div>
+      <div class="brand">Andy et Lucy · Robes</div>
+      <div class="stats">
+        <span class="pill" style="background:#f39c1222;color:#f39c12">37 à risque</span>
+        <span class="pill gray">88% du stock</span>
+      </div>
+    </div>
+  </a>
+  <a class="card" href="https://lecloset-factory-production.herokuapp.com/supply/products/prd_f2KHQS" target="_blank" data-tier="yellow">
+    <div class="img-wrap">
+      <img src="https://lecloset.s3.amazonaws.com/uploads/picture/image/prd_f2KHQS/standard_1ihGspmF4Um6RVYcksCcXFpeEM-FaOB6j20250220-2-d4l78x" alt="" loading="lazy">
+      <span class="dot" style="background:#f39c12"></span>
+    </div>
+    <div class="info">
+      <div class="name">Veste Lasandra</div>
+      <div class="brand">New Studio · Vestes</div>
+      <div class="stats">
+        <span class="pill" style="background:#f39c1222;color:#f39c12">37 à risque</span>
+        <span class="pill gray">71% du stock</span>
+      </div>
+    </div>
+  </a>
+  <a class="card" href="https://lecloset-factory-production.herokuapp.com/supply/products/prd_E5SgJU" target="_blank" data-tier="yellow">
+    <div class="img-wrap">
+      <img src="https://lecloset.imgix.net/uploads/picture/image/prd_E5SgJU/standard_1j506ffpiM1Q5UaQ3nl_BJvBf_P1xJ5WO20260318-2-ak0z5t" alt="" loading="lazy">
+      <span class="dot" style="background:#f39c12"></span>
+    </div>
+    <div class="info">
+      <div class="name">Haut Libella</div>
+      <div class="brand">Ichi · Tops</div>
+      <div class="stats">
+        <span class="pill" style="background:#f39c1222;color:#f39c12">37 à risque</span>
+        <span class="pill gray">52% du stock</span>
+      </div>
+    </div>
+  </a>
+  <a class="card" href="https://lecloset-factory-production.herokuapp.com/supply/products/prd_z2XNW0" target="_blank" data-tier="yellow">
+    <div class="img-wrap">
+      <img src="https://lecloset.s3.amazonaws.com/uploads/picture/image/prd_z2XNW0/standard_1PrZqUIMDXyD7lyOesk7MF8AyxcC2g2MG20260226-2-b9ey3f.jpeg" alt="" loading="lazy">
+      <span class="dot" style="background:#f39c12"></span>
+    </div>
+    <div class="info">
+      <div class="name">Pantalon Victorine</div>
+      <div class="brand">Garance · Pantalons</div>
+      <div class="stats">
+        <span class="pill" style="background:#f39c1222;color:#f39c12">37 à risque</span>
+        <span class="pill gray">47% du stock</span>
+      </div>
+    </div>
+  </a>
+  <a class="card" href="https://lecloset-factory-production.herokuapp.com/supply/products/prd_8quEpW" target="_blank" data-tier="yellow">
+    <div class="img-wrap">
+      <img src="https://lecloset.imgix.net/uploads/picture/image/prd_8quEpW/standard_4df59832-b107-4709-a932-c6524db6cb75.jpeg" alt="" loading="lazy">
+      <span class="dot" style="background:#f39c12"></span>
+    </div>
+    <div class="info">
+      <div class="name">Short Sherie</div>
+      <div class="brand">Musy Muse · Jupes</div>
+      <div class="stats">
+        <span class="pill" style="background:#f39c1222;color:#f39c12">37 à risque</span>
+        <span class="pill gray">43% du stock</span>
+      </div>
+    </div>
+  </a>
+  <a class="card" href="https://lecloset-factory-production.herokuapp.com/supply/products/prd_Q64Czv" target="_blank" data-tier="yellow">
+    <div class="img-wrap">
+      <img src="https://lecloset.imgix.net/uploads/picture/image/prd_Q64Czv/standard_1IFgTK8H7pa7CIouNv-GTEIu54oRuuYar20260212-2-g4dz2k" alt="" loading="lazy">
+      <span class="dot" style="background:#f39c12"></span>
+    </div>
+    <div class="info">
+      <div class="name">Jean Cassondra</div>
+      <div class="brand">Majolica · Jeans</div>
+      <div class="stats">
+        <span class="pill" style="background:#f39c1222;color:#f39c12">37 à risque</span>
+        <span class="pill gray">27% du stock</span>
+      </div>
+    </div>
+  </a>
+  <a class="card" href="https://lecloset-factory-production.herokuapp.com/supply/products/prd_g9yqOW" target="_blank" data-tier="yellow">
+    <div class="img-wrap">
+      <img src="https://lecloset.s3.amazonaws.com/uploads/picture/image/prd_g9yqOW/standard_garment703_4.jpeg" alt="" loading="lazy">
+      <span class="dot" style="background:#f39c12"></span>
+    </div>
+    <div class="info">
+      <div class="name">Chemise Earnestine</div>
+      <div class="brand">Golden Live · Chemises</div>
+      <div class="stats">
+        <span class="pill" style="background:#f39c1222;color:#f39c12">35 à risque</span>
+        <span class="pill gray">45% du stock</span>
+      </div>
+    </div>
+  </a>
+  <a class="card" href="https://lecloset-factory-production.herokuapp.com/supply/products/prd_8D8G8C" target="_blank" data-tier="yellow">
+    <div class="img-wrap">
+      <img src="https://lecloset.s3.amazonaws.com/uploads/picture/image/prd_8D8G8C/standard_garment484_undefined.jpeg" alt="" loading="lazy">
+      <span class="dot" style="background:#f39c12"></span>
+    </div>
+    <div class="info">
+      <div class="name">Robe Wyella</div>
+      <div class="brand">Grace & Mila · Robes</div>
+      <div class="stats">
+        <span class="pill" style="background:#f39c1222;color:#f39c12">35 à risque</span>
+        <span class="pill gray">43% du stock</span>
+      </div>
+    </div>
+  </a>
+  <a class="card" href="https://lecloset-factory-production.herokuapp.com/supply/products/prd_A4MPTS" target="_blank" data-tier="yellow">
+    <div class="img-wrap">
+      <img src="https://lecloset.imgix.net/uploads/picture/image/prd_A4MPTS/standard_8d7275d1-4265-4bbe-a62f-06dfa5d507e4.jpeg" alt="" loading="lazy">
+      <span class="dot" style="background:#f39c12"></span>
+    </div>
+    <div class="info">
+      <div class="name">Chemise Karon</div>
+      <div class="brand">Atelier Evene · Chemises</div>
+      <div class="stats">
+        <span class="pill" style="background:#f39c1222;color:#f39c12">35 à risque</span>
+        <span class="pill gray">20% du stock</span>
+      </div>
+    </div>
+  </a>
+  <a class="card" href="https://lecloset-factory-production.herokuapp.com/supply/products/prd_lQ5yMi" target="_blank" data-tier="green">
+    <div class="img-wrap">
+      <img src="https://lecloset.s3.amazonaws.com/uploads/picture/image/prd_lQ5yMi/standard_1qH6pSTdqWaqXBjt71mpXLrOik1oM4yuI20250623-2-kz5y6l" alt="" loading="lazy">
+      <span class="dot" style="background:#27ae60"></span>
+    </div>
+    <div class="info">
+      <div class="name">Jupe Celina</div>
+      <div class="brand">Lili & Lala · Jupes</div>
+      <div class="stats">
+        <span class="pill" style="background:#27ae6022;color:#27ae60">34 à risque</span>
+        <span class="pill gray">85% du stock</span>
+      </div>
+    </div>
+  </a>
+  <a class="card" href="https://lecloset-factory-production.herokuapp.com/supply/products/prd_ZSTcSS" target="_blank" data-tier="green">
+    <div class="img-wrap">
+      <img src="https://lecloset.s3.amazonaws.com/uploads/picture/image/prd_ZSTcSS/standard_ZZYVCG-ZTRUV8_43__1_.jpg" alt="" loading="lazy">
+      <span class="dot" style="background:#27ae60"></span>
+    </div>
+    <div class="info">
+      <div class="name">Veste Onlamaya</div>
+      <div class="brand">Only · Vestes</div>
+      <div class="stats">
+        <span class="pill" style="background:#27ae6022;color:#27ae60">34 à risque</span>
+        <span class="pill gray">71% du stock</span>
+      </div>
+    </div>
+  </a>
+  <a class="card" href="https://lecloset-factory-production.herokuapp.com/supply/products/prd_3vcVoa" target="_blank" data-tier="green">
+    <div class="img-wrap">
+      <img src="https://lecloset.s3.amazonaws.com/uploads/picture/image/prd_3vcVoa/standard_1VFwTcwxt1WnCYsD3wuDWuIowljGFiPC820250428-2-tdri0" alt="" loading="lazy">
+      <span class="dot" style="background:#27ae60"></span>
+    </div>
+    <div class="info">
+      <div class="name">Blouse Blythe</div>
+      <div class="brand">La Petite Etoile · Chemises</div>
+      <div class="stats">
+        <span class="pill" style="background:#27ae6022;color:#27ae60">34 à risque</span>
+        <span class="pill gray">60% du stock</span>
+      </div>
+    </div>
+  </a>
+  <a class="card" href="https://lecloset-factory-production.herokuapp.com/supply/products/prd_R2w8gR" target="_blank" data-tier="green">
+    <div class="img-wrap">
+      <img src="https://lecloset.s3.amazonaws.com/uploads/picture/image/prd_R2w8gR/standard_Z1JP5B36458_2.png" alt="" loading="lazy">
+      <span class="dot" style="background:#27ae60"></span>
+    </div>
+    <div class="info">
+      <div class="name">Robe Venelle</div>
+      <div class="brand">Grace & Mila · Robes</div>
+      <div class="stats">
+        <span class="pill" style="background:#27ae6022;color:#27ae60">34 à risque</span>
+        <span class="pill gray">35% du stock</span>
+      </div>
+    </div>
+  </a>
+  <a class="card" href="https://lecloset-factory-production.herokuapp.com/supply/products/prd_be9Uvc" target="_blank" data-tier="green">
+    <div class="img-wrap">
+      <img src="https://lecloset.imgix.net/uploads/picture/image/prd_be9Uvc/standard_1ITo0eIKQVWs9Yfos7O2KrWbTMFa46M_q20250306-2-e1wpjt" alt="" loading="lazy">
+      <span class="dot" style="background:#27ae60"></span>
+    </div>
+    <div class="info">
+      <div class="name">Jean Legging Maternité Gable</div>
+      <div class="brand">Seraphine · Jeans</div>
+      <div class="stats">
+        <span class="pill" style="background:#27ae6022;color:#27ae60">33 à risque</span>
+        <span class="pill gray">70% du stock</span>
+      </div>
+    </div>
+  </a>
+  <a class="card" href="https://lecloset-factory-production.herokuapp.com/supply/products/prd_6UFbO8" target="_blank" data-tier="green">
+    <div class="img-wrap">
+      <img src="https://lecloset.s3.amazonaws.com/uploads/picture/image/prd_6UFbO8/standard_ZKAQSI-ZRPZTJ36573_2.png" alt="" loading="lazy">
+      <span class="dot" style="background:#27ae60"></span>
+    </div>
+    <div class="info">
+      <div class="name">Chemise Kelsey</div>
+      <div class="brand">Golden Live · Chemises</div>
+      <div class="stats">
+        <span class="pill" style="background:#27ae6022;color:#27ae60">33 à risque</span>
+        <span class="pill gray">63% du stock</span>
+      </div>
+    </div>
+  </a>
+  <a class="card" href="https://lecloset-factory-production.herokuapp.com/supply/products/prd_iOSvUV" target="_blank" data-tier="green">
+    <div class="img-wrap">
+      <img src="https://lecloset.s3.amazonaws.com/uploads/picture/image/prd_iOSvUV/standard_1D6TuKChnunEsSeU1RP2LQKSdMUZ1uJHG20250923-2-rew1cq" alt="" loading="lazy">
+      <span class="dot" style="background:#27ae60"></span>
+    </div>
+    <div class="info">
+      <div class="name">Jean Maternité Tanya</div>
+      <div class="brand">Vero Moda Maternity · Jeans</div>
+      <div class="stats">
+        <span class="pill" style="background:#27ae6022;color:#27ae60">32 à risque</span>
+        <span class="pill gray">78% du stock</span>
+      </div>
+    </div>
+  </a>
+  <a class="card" href="https://lecloset-factory-production.herokuapp.com/supply/products/prd_OEoZrN" target="_blank" data-tier="green">
+    <div class="img-wrap">
+      <img src="https://lecloset.s3.amazonaws.com/uploads/picture/image/prd_OEoZrN/standard_1ThVpfWg9EPFi3tjd5mBTTP2SkGqcpCAJ20251127-2-b9fzbu" alt="" loading="lazy">
+      <span class="dot" style="background:#27ae60"></span>
+    </div>
+    <div class="info">
+      <div class="name">Robe Maternité Maddy</div>
+      <div class="brand">Mamalicious · Robes</div>
+      <div class="stats">
+        <span class="pill" style="background:#27ae6022;color:#27ae60">32 à risque</span>
+        <span class="pill gray">70% du stock</span>
+      </div>
+    </div>
+  </a>
+  <a class="card" href="https://lecloset-factory-production.herokuapp.com/supply/products/prd_I2HwJ0" target="_blank" data-tier="green">
+    <div class="img-wrap">
+      <img src="https://lecloset.s3.amazonaws.com/uploads/picture/image/prd_I2HwJ0/standard_1zX-juWjFoNRoEuh52QEl3qnuDnLN5Qyz20250306-2-klnxgk" alt="" loading="lazy">
+      <span class="dot" style="background:#27ae60"></span>
+    </div>
+    <div class="info">
+      <div class="name">Jupe Mindy</div>
+      <div class="brand">Orfeo · Jupes</div>
+      <div class="stats">
+        <span class="pill" style="background:#27ae6022;color:#27ae60">32 à risque</span>
+        <span class="pill gray">68% du stock</span>
+      </div>
+    </div>
+  </a>
+</div>
+<script>
+const cards = document.querySelectorAll('.card');
+const counts = {all:0,red:0,orange:0,yellow:0};
+cards.forEach(c => {
+  counts.all++;
+  if(c.dataset.tier==='red')   {counts.red++;counts.orange++;counts.yellow++;}
+  else if(c.dataset.tier==='orange') {counts.orange++;counts.yellow++;}
+  else if(c.dataset.tier==='yellow') {counts.yellow++;}
+});
+document.getElementById('n-all').textContent = counts.all;
+document.getElementById('n-red').textContent = counts.red;
+document.getElementById('n-orange').textContent = counts.orange;
+document.getElementById('n-yellow').textContent = counts.yellow;
 
-  document.getElementById('count').textContent = `${data.rows.length} produits`;
-  document.getElementById('last-update').textContent =
-    'Mis à jour ' + new Date().toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
+function updateCount(){
+  const v = document.querySelectorAll('.card:not([hidden])').length;
+  document.getElementById('count').textContent = v + ' produits';
 }
+updateCount();
 
-function applyFilter(tier) {
-  document.querySelectorAll('.card').forEach(card => {
-    if (tier === 'all') {
-      card.hidden = false;
-    } else if (tier === 'red') {
-      card.hidden = card.dataset.tier !== 'red';
-    } else if (tier === 'orange') {
-      card.hidden = !['red','orange'].includes(card.dataset.tier);
-    } else if (tier === 'yellow') {
-      card.hidden = !['red','orange','yellow'].includes(card.dataset.tier);
-    }
-  });
-  const visible = document.querySelectorAll('.card:not([hidden])').length;
-  document.getElementById('count').textContent = `${visible} produits`;
-}
-
-// Filtres
-document.querySelectorAll('.filter-btn').forEach(btn => {
+document.querySelectorAll('.btn').forEach(btn => {
   btn.addEventListener('click', () => {
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    applyFilter(btn.dataset.filter);
+    const f = btn.dataset.f;
+    cards.forEach(c => {
+      c.hidden = !(f==='all' || f===c.dataset.tier ||
+        (f==='orange' && ['red','orange'].includes(c.dataset.tier)) ||
+        (f==='yellow' && ['red','orange','yellow'].includes(c.dataset.tier)));
+    });
+    updateCount();
   });
 });
-
-// Chargement
-(async () => {
-  try {
-    const data = await loadData();
-    document.getElementById('loading').hidden = true;
-    buildGrid(data);
-  } catch(e) {
-    document.getElementById('loading').hidden = true;
-    const errEl = document.getElementById('error');
-    errEl.hidden = false;
-    errEl.innerHTML = `
-      ⚠️ Impossible de charger les données Metabase.<br>
-      <small>Assure-toi d'être connecté·e à <a href="${METABASE_URL}" target="_blank">Metabase</a> dans un autre onglet, puis recharge cette page.</small>`;
-  }
-})();
 </script>
 </body>
 </html>
