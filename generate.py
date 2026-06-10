@@ -22,12 +22,20 @@ CAT = {
     "jackets_and_blazers": "Vestes", "knits_and_sweaters": "Pulls",
     "skirts_and_shorts": "Jupes", "jumpsuit_and_overalls": "Combinaisons"
 }
+WF = {
+    "tempere": "Toutes saisons",
+    "tempere_ete": "Printemps / \u00c9t\u00e9",
+    "tempere_hiver": "Automne / Hiver",
+    "plein_ete": "Plein \u00e9t\u00e9",
+    "plein_hiver": "Plein hiver",
+}
 
 cards = []
 for row in rows:
     name  = str(row[idx["product_name"]])
     brand = str(row[idx["brand_name"]])
     cat   = CAT.get(str(row[idx["category_name"]]), str(row[idx["category_name"]]).replace("_"," ").title())
+    wf    = WF.get(str(row[idx["weatherfit"]]), str(row[idx["weatherfit"]]))
     img   = str(row[idx["main_picture_url"]] or "")
     url   = str(row[idx["product_url"]])
     risk  = int(row[idx["at_risk_item_count"]])
@@ -38,8 +46,9 @@ for row in rows:
         '    <div class="info">\n'
         '      <div class="name">' + name + '</div>\n'
         '      <div class="sub">' + brand + ' &middot; ' + cat + '</div>\n'
-        '      <div class="meta">' + str(risk) + ' pcs &agrave; risque &nbsp;&middot;&nbsp; ' + str(stock) + ' stock utile</div>\n'
-        '      <div class="link">&rarr; Factory</div>\n'
+        '      <div class="season">' + wf + '</div>\n'
+        '      <div class="meta">' + str(risk) + ' pcs \u00e0 risque &nbsp;&middot;&nbsp; ' + str(stock) + ' stock utile</div>\n'
+        '      <div class="link">\u2192 Factory</div>\n'
         '    </div>\n'
         '  </a>'
     )
